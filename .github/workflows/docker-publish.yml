@@ -23,9 +23,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # arm64 is emulated. That's cheap here because better-sqlite3 ships
-      # prebuilt N-API binaries for both architectures — nothing is compiled
-      # under QEMU, which is the part that would otherwise be painfully slow.
+      # arm64 is emulated. That stays cheap only because the Dockerfile installs
+      # with --ignore-scripts and uses better-sqlite3's prebuilt N-API binaries
+      # — nothing compiles under QEMU, which is the slow part.
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
 
