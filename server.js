@@ -15,40 +15,50 @@ import { streamReply, isConfigured, modelName, AIError } from "./ai.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
 
-// Who can use the bot. The kid picks a name on first visit and it's remembered
-// in their browser; the name scopes the history sidebar and is stored on every
-// chat row. Override with KIDS_NAMES=Ada,Grace in .env.
-const KID_NAMES = (process.env.KIDS_NAMES || "Ada,Grace,Sam")
-  .split(",")
-  .map((n) => n.trim())
-  .filter(Boolean);
-
 const MAX_MESSAGE_CHARS = 1000; // a 6-year-old's question is never this long
+const MAX_NAME_CHARS = 24;
 const MAX_TURNS = 20; // messages of history sent to the model
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
 app.use(express.static(join(__dirname, "public")));
 
-/** The kid's name, as supplied by the client. Only names on the configured
- *  list are accepted, so `kid` can never become arbitrary user-controlled
- *  data in the database. */
+/** The name the kid typed on the welcome screen. It scopes the history sidebar
+ *  and is stored on every chat row.
+ *
+ *  This is NOT authentication — it's a label. Anyone who types "Alex" sees
+ *  Alex's chats, which is the intended behaviour on a family network where the
+ *  app has no login at all. Control characters are stripped and the length is
+ *  capped so the value stays a sane database key; the `kid` column is
+ *  COLLATE NOCASE, so "alex" and "Alex" are the same person. */
 function kidFrom(value) {
-  const name = String(value || "").trim();
-  return KID_NAMES.find((n) => n.toLowerCase() === name.toLowerCase()) || null;
+  const name = String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "") // control chars
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_NAME_CHARS);
+  return name || null;
 }
 
-// Names for the picker + whether the server can actually reach a model. The
-// front end shows a plain-English setup message instead of a broken chat box
-// when Cloudflare credentials are missing.
+/** Ownership check for a chat row. Must match the database's COLLATE NOCASE
+ *  behaviour, or a kid who typed "alex" today and "Alex" yesterday would see
+ *  their own chats in the sidebar but get a 404 opening them. */
+function sameKid(a, b) {
+  return typeof a === "string" && typeof b === "string" &&
+    a.toLowerCase() === b.toLowerCase();
+}
+
+// Whether the server can actually reach a model. The front end shows a
+// plain-English setup message instead of a broken chat box when the Cloudflare
+// credentials are missing.
 app.get("/api/config", (_req, res) => {
-  res.json({ kids: KID_NAMES, ready: isConfigured(), model: modelName() });
+  res.json({ ready: isConfigured(), model: modelName() });
 });
 
 // History sidebar: this kid's conversations, newest first.
 app.get("/api/chats", (req, res) => {
   const kid = kidFrom(req.query.kid);
-  if (!kid) return res.status(400).json({ error: "Unknown name" });
+  if (!kid) return res.status(400).json({ error: "Missing name" });
   res.json(listChats(kid));
 });
 
@@ -56,7 +66,7 @@ app.get("/api/chats", (req, res) => {
 app.get("/api/chats/:id", (req, res) => {
   const kid = kidFrom(req.query.kid);
   const chat = getChat(req.params.id);
-  if (!chat || !kid || chat.kid !== kid) {
+  if (!chat || !kid || !sameKid(chat.kid, kid)) {
     return res.status(404).json({ error: "Chat not found" });
   }
   res.json({ chat, messages: getMessages(chat.id) });
@@ -65,7 +75,7 @@ app.get("/api/chats/:id", (req, res) => {
 app.delete("/api/chats/:id", (req, res) => {
   const kid = kidFrom(req.query.kid);
   const chat = getChat(req.params.id);
-  if (!chat || !kid || chat.kid !== kid) {
+  if (!chat || !kid || !sameKid(chat.kid, kid)) {
     return res.status(404).json({ error: "Chat not found" });
   }
   deleteChat(chat.id);
@@ -83,7 +93,7 @@ app.delete("/api/chats/:id", (req, res) => {
  * mid-answer. That matters: this DB is the record a parent reviews. */
 app.post("/api/chat", async (req, res) => {
   const kid = kidFrom(req.body?.kid);
-  if (!kid) return res.status(400).json({ error: "Please pick your name first." });
+  if (!kid) return res.status(400).json({ error: "Please type your name first." });
 
   const text = String(req.body?.text || "").trim();
   if (!text) return res.status(400).json({ error: "Type a message first!" });
@@ -94,7 +104,7 @@ app.post("/api/chat", async (req, res) => {
   let chat = null;
   if (req.body?.chatId != null) {
     chat = getChat(req.body.chatId);
-    if (!chat || chat.kid !== kid) {
+    if (!chat || !sameKid(chat.kid, kid)) {
       return res.status(404).json({ error: "Chat not found" });
     }
   }
@@ -154,7 +164,6 @@ app.get("/api/health", (_req, res) => res.json({ ok: true, ready: isConfigured()
 
 app.listen(PORT, () => {
   console.log(`kids-chatbot listening on http://0.0.0.0:${PORT}`);
-  console.log(`  kids:  ${KID_NAMES.join(", ")}`);
   console.log(`  model: ${modelName()}`);
   if (!isConfigured()) {
     console.warn(

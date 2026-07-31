@@ -9,14 +9,21 @@
 </head>
 <body>
 
-<!-- Name picker. Shown on first visit; the choice is remembered in this
-     browser and scopes the history sidebar. -->
+<!-- Name prompt. Shown on first visit; the name is remembered in this browser
+     and scopes the history sidebar. -->
 <div class="overlay" id="namePicker" hidden>
   <div class="picker-card">
     <div class="picker-spark">✨</div>
     <h1>Hi! I'm Sparky.</h1>
-    <p>Who's chatting with me today?</p>
-    <div class="name-buttons" id="nameButtons"></div>
+    <p>What's your name?</p>
+    <form class="name-form" id="nameForm">
+      <label class="sr-only" for="nameInput">Your name</label>
+      <input id="nameInput" type="text" maxlength="24" autocomplete="off"
+             autocapitalize="words" spellcheck="false"
+             placeholder="Type your name…" required>
+      <button type="submit">Let's go! →</button>
+    </form>
+    <p class="picker-hint" id="nameHint" hidden></p>
   </div>
 </div>
 

@@ -16,7 +16,9 @@ db.pragma("foreign_keys = ON");
 db.exec(`
   CREATE TABLE IF NOT EXISTS chats (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    kid        TEXT    NOT NULL,
+    -- Free text the kid typed on the welcome screen. NOCASE so "alex" and
+    -- "Alex" are one person, in both lookups and the index below.
+    kid        TEXT    NOT NULL COLLATE NOCASE,
     title      TEXT    NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL

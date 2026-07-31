@@ -4,8 +4,14 @@ A friendly chatbot for kids aged 6+, called **Sparky**. It runs on your own
 machine in Docker, keeps a complete log of every conversation in a local SQLite
 database, and uses **Cloudflare Workers AI** for the model.
 
-The web UI has a history sidebar and a **New chat** button. Each kid picks their
-name on first visit, and the sidebar shows only their own conversations.
+The web UI has a history sidebar and a **New chat** button. Each kid types their
+name on first visit; it's remembered in that browser, and the sidebar shows only
+the conversations under that name.
+
+The name is a **label, not a login** — there is no password, so anyone who types
+"Alex" sees Alex's chats. That's deliberate for a family network where the app
+has no accounts at all. Names are matched case-insensitively, so `alex` and
+`Alex` are the same person.
 
 ## Where things live
 
@@ -55,13 +61,8 @@ Everything is environment variables (see `.env.example`):
 | `CLOUDFLARE_ACCOUNT_ID` | — | Required for chat to work |
 | `CLOUDFLARE_API_TOKEN` | — | Required for chat to work |
 | `KIDS_MODEL` | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Any Workers AI text model |
-| `KIDS_NAMES` | `Ada,Grace,Sam` | The name-picker list |
 | `PORT` | `3000` | |
 | `DB_PATH` | `./data/chat.db` | `/data/chat.db` inside the container |
-
-Changing `KIDS_NAMES` doesn't migrate existing chats — history is keyed on the
-name string, so a removed name's chats stay in the database but stop being
-reachable from the UI.
 
 ## Reading the chat log
 

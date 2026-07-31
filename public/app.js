@@ -9,9 +9,10 @@
 
   var KID_KEY = "kids-chatbot.kid";
 
+  var MAX_NAME = 24; // keep in step with MAX_NAME_CHARS in server.js
+
   var state = {
     kid: null,
-    kids: [],
     ready: false,
     chatId: null,
     messages: [], // {role, content}[] — mirrors what the server has stored
@@ -22,7 +23,9 @@
   var els = {
     app: $("app"),
     picker: $("namePicker"),
-    nameButtons: $("nameButtons"),
+    nameForm: $("nameForm"),
+    nameInput: $("nameInput"),
+    nameHint: $("nameHint"),
     sidebar: $("sidebar"),
     scrim: $("scrim"),
     history: $("history"),
@@ -40,11 +43,10 @@
   fetch("/api/config")
     .then(function (r) { return r.json(); })
     .then(function (cfg) {
-      state.kids = cfg.kids || [];
       state.ready = !!cfg.ready;
 
-      var saved = localStorage.getItem(KID_KEY);
-      if (saved && state.kids.indexOf(saved) !== -1) {
+      var saved = cleanName(localStorage.getItem(KID_KEY) || "");
+      if (saved) {
         startAs(saved);
       } else {
         showPicker();
@@ -56,20 +58,37 @@
       showError("I can't reach the server. Is it running?");
     });
 
+  /* Mirror of kidFrom() in server.js: strip control characters, collapse
+     runs of whitespace, trim, and cap the length. Doing it here too means the
+     name shown in the UI is exactly the one the server will store. */
+  function cleanName(value) {
+    return String(value || "")
+      .replace(/[\u0000-\u001f\u007f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, MAX_NAME);
+  }
+
   function showPicker() {
-    els.nameButtons.innerHTML = "";
-    state.kids.forEach(function (name) {
-      var b = document.createElement("button");
-      b.textContent = name;
-      b.addEventListener("click", function () {
-        localStorage.setItem(KID_KEY, name);
-        startAs(name);
-      });
-      els.nameButtons.appendChild(b);
-    });
     els.picker.hidden = false;
     els.app.hidden = true;
+    els.nameHint.hidden = true;
+    els.nameInput.value = "";
+    els.nameInput.focus();
   }
+
+  els.nameForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = cleanName(els.nameInput.value);
+    if (!name) {
+      els.nameHint.textContent = "Please type your name so I know who you are!";
+      els.nameHint.hidden = false;
+      els.nameInput.focus();
+      return;
+    }
+    localStorage.setItem(KID_KEY, name);
+    startAs(name);
+  });
 
   function startAs(name) {
     state.kid = name;
