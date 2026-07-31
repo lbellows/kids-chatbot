@@ -20,6 +20,13 @@
 
 * { box-sizing: border-box; }
 
+/* The name prompt and the app are toggled with the `hidden` attribute, and both
+   set `display: flex` below. An author `display` rule beats the browser's
+   built-in `[hidden] { display: none }`, so without this they never actually
+   hide — the overlay would sit on top of the app forever. Keep the !important:
+   it's what makes `hidden` win over any display set elsewhere in this file. */
+[hidden] { display: none !important; }
+
 html, body {
   height: 100%;
   margin: 0;
