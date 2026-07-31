@@ -428,6 +428,12 @@ button, textarea { font-family: inherit; }
   line-height: 1.4;
   resize: none;
   outline: none;
+  /* The box is auto-grown to fit its content by autoGrow(), so a scrollbar is
+     only ever correct once it hits max-height. Without this a one-line box
+     shows a stub scrollbar, because a textarea defaults to overflow:auto and
+     its content is a hair taller than the `rows="1"` height. autoGrow flips
+     this back to `auto` at max-height. */
+  overflow-y: hidden;
 }
 .composer textarea:focus { border-color: var(--purple); }
 
@@ -445,6 +451,53 @@ button, textarea { font-family: inherit; }
 }
 .composer button:hover:not(:disabled) { background: var(--purple-dark); transform: translateY(-1px); }
 .composer button:disabled { background: #bdb7e6; cursor: not-allowed; }
+
+/* ---------- emoji picker ---------- */
+
+.emoji-btn {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: var(--panel);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.emoji-btn:hover { border-color: var(--purple); transform: translateY(-1px); }
+.emoji-btn[aria-expanded="true"] { border-color: var(--purple); background: #ede9ff; }
+
+.emoji-panel {
+  position: absolute;
+  left: 50%;
+  /* Clears the composer (~68px) plus the disclaimer line beneath it (~38px). */
+  bottom: 114px;
+  z-index: 15;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+  gap: 4px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(36, 31, 71, 0.28);
+}
+.emoji-panel button {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+.emoji-panel button:hover { background: var(--bg); transform: scale(1.15); }
 
 .disclaimer {
   max-width: 760px;

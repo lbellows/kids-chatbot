@@ -36,6 +36,8 @@
     composer: $("composer"),
     scrollDown: $("scrollDown"),
     whoami: $("whoami"),
+    emojiBtn: $("emojiBtn"),
+    emojiPanel: $("emojiPanel"),
   };
 
   /* ---------- boot ---------- */
@@ -96,6 +98,7 @@
     els.app.hidden = false;
     els.whoami.textContent = "👋 " + name + " — not you?";
     newChat();
+    autoGrow(); // now that the app is visible, size the input for real
     loadHistory();
   }
 
@@ -462,6 +465,7 @@
     if (!text) return;
     els.input.value = "";
     autoGrow();
+    setEmojiOpen(false);
     sendMessage(text);
   });
 
@@ -472,11 +476,94 @@
     }
   });
 
+  /* Size the box to its content. Scrolling is suppressed in CSS and only
+     switched on once we're clamped at max-height, so a single-line box never
+     shows a stub scrollbar. */
+  var MAX_INPUT_H = 160;
   function autoGrow() {
-    els.input.style.height = "auto";
-    els.input.style.height = Math.min(els.input.scrollHeight, 160) + "px";
+    var el = els.input;
+    el.style.height = "auto";
+    // While the app is still `hidden` nothing has been laid out, so scrollHeight
+    // reads 0 and we'd pin the box to a few pixels tall for good. Leave the
+    // stylesheet height alone until the element is actually on screen.
+    if (el.scrollHeight === 0) {
+      el.style.overflowY = "hidden";
+      return;
+    }
+    // scrollHeight excludes the border, but `box-sizing: border-box` (set
+    // globally) means style.height includes it. Without adding the border back
+    // the box lands a few px short of its own content, which both clips the
+    // last line and is what produced the stub scrollbar on a one-line input.
+    var cs = getComputedStyle(el);
+    var borders =
+      (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.borderBottomWidth) || 0);
+    var wanted = el.scrollHeight + borders;
+    el.style.height = Math.min(wanted, MAX_INPUT_H) + "px";
+    el.style.overflowY = wanted > MAX_INPUT_H ? "auto" : "hidden";
   }
   els.input.addEventListener("input", autoGrow);
+
+  /* ---------- emoji picker ---------- */
+
+  var EMOJI = (
+    "😀 😃 😄 😁 😆 😊 🙂 😉 😍 🥰 😘 😋 😜 🤪 🤗 🤔 " +
+    "😎 🥳 😢 😮 😴 🤢 🤠 👻 🤖 👽 🎃 💩 " +
+    "❤️ 🧡 💛 💚 💙 💜 ⭐ 🌟 ✨ 💫 🔥 ⚡ 🌈 ☀️ 🌙 ☁️ " +
+    "🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🦄 " +
+    "🐝 🦋 🐢 🐍 🐙 🐳 🐬 🐟 🦕 🦖 🦔 🦉 🐴 🐛 " +
+    "🌸 🌼 🌻 🌷 🌵 🌲 🍀 🍎 🍌 🍓 🍕 🍔 🍟 🍦 🍪 🍩 " +
+    "🎂 🍭 🥕 🌽 ⚽ 🏀 🎾 🎨 🎵 🎸 🚀 ✈️ 🚗 🚂 🏰 🎁 " +
+    "👍 👎 👋 🙌 👏 🤝 💪 🎉 ❓ ❗"
+  ).split(" ");
+
+  var emojiOpen = false;
+
+  function buildEmojiPanel() {
+    EMOJI.forEach(function (ch) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = ch;
+      b.setAttribute("aria-label", "Insert " + ch);
+      b.addEventListener("click", function () { insertEmoji(ch); });
+      els.emojiPanel.appendChild(b);
+    });
+  }
+
+  /* Insert at the caret rather than appending, so a kid can drop an emoji into
+     the middle of what they've already typed. */
+  function insertEmoji(ch) {
+    var el = els.input;
+    var start = el.selectionStart != null ? el.selectionStart : el.value.length;
+    var end = el.selectionEnd != null ? el.selectionEnd : el.value.length;
+    el.value = el.value.slice(0, start) + ch + el.value.slice(end);
+    var caret = start + ch.length;
+    el.setSelectionRange(caret, caret);
+    el.focus();
+    autoGrow();
+  }
+
+  function setEmojiOpen(open) {
+    emojiOpen = open;
+    els.emojiPanel.hidden = !open;
+    els.emojiBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  els.emojiBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setEmojiOpen(!emojiOpen);
+  });
+  els.emojiPanel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () {
+    if (emojiOpen) setEmojiOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && emojiOpen) {
+      setEmojiOpen(false);
+      els.input.focus();
+    }
+  });
+
+  buildEmojiPanel();
 
   /* ---------- chrome ---------- */
 

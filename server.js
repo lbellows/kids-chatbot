@@ -48,6 +48,13 @@ function sameKid(a, b) {
     a.toLowerCase() === b.toLowerCase();
 }
 
+/** Can this kid act on this chat? Soft-deleted chats are treated as gone by the
+ *  whole API — otherwise a "deleted" conversation could still be reopened or
+ *  appended to by guessing its id. The rows stay in the database regardless. */
+function usable(chat, kid) {
+  return Boolean(chat) && Boolean(kid) && sameKid(chat.kid, kid) && !chat.deleted_at;
+}
+
 // Whether the server can actually reach a model. The front end shows a
 // plain-English setup message instead of a broken chat box when the Cloudflare
 // credentials are missing.
@@ -66,7 +73,7 @@ app.get("/api/chats", (req, res) => {
 app.get("/api/chats/:id", (req, res) => {
   const kid = kidFrom(req.query.kid);
   const chat = getChat(req.params.id);
-  if (!chat || !kid || !sameKid(chat.kid, kid)) {
+  if (!usable(chat, kid)) {
     return res.status(404).json({ error: "Chat not found" });
   }
   res.json({ chat, messages: getMessages(chat.id) });
@@ -75,7 +82,7 @@ app.get("/api/chats/:id", (req, res) => {
 app.delete("/api/chats/:id", (req, res) => {
   const kid = kidFrom(req.query.kid);
   const chat = getChat(req.params.id);
-  if (!chat || !kid || !sameKid(chat.kid, kid)) {
+  if (!usable(chat, kid)) {
     return res.status(404).json({ error: "Chat not found" });
   }
   deleteChat(chat.id);
@@ -104,7 +111,7 @@ app.post("/api/chat", async (req, res) => {
   let chat = null;
   if (req.body?.chatId != null) {
     chat = getChat(req.body.chatId);
-    if (!chat || !sameKid(chat.kid, kid)) {
+    if (!usable(chat, kid)) {
       return res.status(404).json({ error: "Chat not found" });
     }
   }

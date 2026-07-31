@@ -61,7 +61,13 @@
 
     <button class="scroll-down" id="scrollDown" aria-label="Go to newest" hidden>↓</button>
 
+    <!-- Emoji palette. A phone keyboard already has an emoji key; a desktop
+         keyboard mostly doesn't, so this is how a kid on a PC adds one. -->
+    <div class="emoji-panel" id="emojiPanel" hidden></div>
+
     <form class="composer" id="composer">
+      <button type="button" class="emoji-btn" id="emojiBtn"
+              aria-label="Add an emoji" aria-expanded="false" title="Add an emoji">🙂</button>
       <textarea id="input" rows="1" maxlength="1000"
                 placeholder="Ask me anything…"
                 autocomplete="off" spellcheck="true"></textarea>

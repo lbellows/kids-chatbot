@@ -145,8 +145,23 @@ sqlite3 data/chat.db "
   ORDER BY m.id DESC LIMIT 40;"
 ```
 
-Deleting a chat in the UI deletes its messages too (`ON DELETE CASCADE`). If you
-want an unerasable record, back up `data/chat.db` on a schedule.
+**Deleting is a soft delete.** The trash icon stamps `chats.deleted_at` and the
+chat disappears from that kid's sidebar, but the row and every message stay in
+the database — a child cannot erase a conversation from the record. Nothing in
+the app ever issues a SQL `DELETE`.
+
+To see what's been deleted:
+
+```sh
+sqlite3 data/chat.db "
+  SELECT c.kid, c.title, datetime(c.deleted_at/1000,'unixepoch','localtime') AS deleted
+  FROM chats c WHERE c.deleted_at IS NOT NULL ORDER BY c.deleted_at DESC;"
+```
+
+Add `AND c.deleted_at IS NULL` to the transcript query above if you'd rather
+read only the chats still visible to the kid. To actually purge something, do it
+deliberately yourself — `DELETE FROM chats WHERE id = ...` (messages follow via
+`ON DELETE CASCADE`).
 
 ## Safety
 

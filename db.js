@@ -36,20 +36,38 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_messages_chat ON messages(chat_id, id);
 `);
 
+/* Deleting a chat is a SOFT delete: the row is stamped with `deleted_at` and
+ * disappears from the kid's sidebar, but it and all its messages stay in the
+ * database. This database is the record a grown-up reviews, so a child must not
+ * be able to erase a conversation from it. Nothing in the app ever issues a
+ * DELETE — pruning, if it's ever wanted, is a deliberate act with sqlite3.
+ *
+ * Added after the first deploy, hence the migration rather than a column in the
+ * CREATE TABLE above. */
+const hasDeletedAt = db
+  .prepare("SELECT COUNT(*) AS n FROM pragma_table_info('chats') WHERE name = 'deleted_at'")
+  .get().n > 0;
+if (!hasDeletedAt) {
+  db.exec("ALTER TABLE chats ADD COLUMN deleted_at INTEGER");
+  console.log("db: added chats.deleted_at (soft delete)");
+}
+
 const createChatStmt = db.prepare(
   "INSERT INTO chats (kid, title, created_at, updated_at) VALUES (?, ?, ?, ?)"
 );
 const touchChatStmt = db.prepare("UPDATE chats SET updated_at = ? WHERE id = ?");
 const getChatStmt = db.prepare(
-  "SELECT id, kid, title, created_at, updated_at FROM chats WHERE id = ?"
+  "SELECT id, kid, title, created_at, updated_at, deleted_at FROM chats WHERE id = ?"
 );
 const listChatsStmt = db.prepare(`
   SELECT id, kid, title, created_at, updated_at FROM chats
-  WHERE kid = ?
+  WHERE kid = ? AND deleted_at IS NULL
   ORDER BY updated_at DESC
   LIMIT ?
 `);
-const deleteChatStmt = db.prepare("DELETE FROM chats WHERE id = ?");
+const softDeleteStmt = db.prepare(
+  "UPDATE chats SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL"
+);
 
 const insertMessageStmt = db.prepare(
   "INSERT INTO messages (chat_id, role, content, ts) VALUES (?, ?, ?, ?)"
@@ -76,8 +94,9 @@ export function listChats(kid, limit = 100) {
   return listChatsStmt.all(kid, Math.min(Math.max(Number(limit) || 100, 1), 500));
 }
 
+/** Hide a chat from the sidebar. The row and its messages are kept. */
 export function deleteChat(id) {
-  return deleteChatStmt.run(Number(id)).changes > 0;
+  return softDeleteStmt.run(Date.now(), Number(id)).changes > 0;
 }
 
 export function getMessages(chatId) {
