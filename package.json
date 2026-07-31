@@ -1,0 +1,19 @@
+{
+  "name": "kids-chatbot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A friendly, kid-safe chatbot (ages 6+) for the local network. Runs in Docker, logs every chat to SQLite, and uses Cloudflare Workers AI for the model.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.2",
+    "express": "^4.21.2"
+  }
+}

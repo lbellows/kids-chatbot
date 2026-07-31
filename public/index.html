@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparky — your friendly helper</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- Name picker. Shown on first visit; the choice is remembered in this
+     browser and scopes the history sidebar. -->
+<div class="overlay" id="namePicker" hidden>
+  <div class="picker-card">
+    <div class="picker-spark">✨</div>
+    <h1>Hi! I'm Sparky.</h1>
+    <p>Who's chatting with me today?</p>
+    <div class="name-buttons" id="nameButtons"></div>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-head">
+      <button class="new-chat" id="newChat">
+        <span aria-hidden="true">✏️</span> New chat
+      </button>
+      <button class="icon-btn close-sidebar" id="closeSidebar" aria-label="Close menu">✕</button>
+    </div>
+
+    <div class="history-label">Your chats</div>
+    <nav class="history" id="history"></nav>
+
+    <div class="sidebar-foot">
+      <button class="whoami" id="whoami" title="Not you? Tap to switch."></button>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <main class="chat">
+    <header class="chat-head">
+      <button class="icon-btn open-sidebar" id="openSidebar" aria-label="Open menu">☰</button>
+      <div class="chat-title">
+        <span class="spark" aria-hidden="true">⭐</span>
+        <h2 id="chatTitle">Sparky</h2>
+      </div>
+      <button class="icon-btn new-chat-mobile" id="newChatMobile" aria-label="New chat">✏️</button>
+    </header>
+
+    <div class="messages" id="messages"></div>
+
+    <button class="scroll-down" id="scrollDown" aria-label="Go to newest" hidden>↓</button>
+
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" maxlength="1000"
+                placeholder="Ask me anything…"
+                autocomplete="off" spellcheck="true"></textarea>
+      <button type="submit" id="send" aria-label="Send">➤</button>
+    </form>
+    <p class="disclaimer">Sparky is a computer helper and can make mistakes. Ask a grown-up about anything important.</p>
+  </main>
+
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# Kids chatbot — runs entirely on your own machine.
+#
+# The only thing that leaves the network is the model call to Cloudflare
+# Workers AI. The app, the web UI, and the full chat log stay here.
+#
+# Setup:  cp .env.example .env   (fill in the two Cloudflare values)
+# Run:    docker compose up -d --build
+# Open:   http://<this-machine-ip>:3000
+#
+# This binds to all interfaces so any device on the LAN can reach it, and the
+# app has no login of its own. Do NOT port-forward 3000 on your router.
+services:
+  chatbot:
+    build: .
+    image: kids-chatbot
+    container_name: kids-chatbot
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /data/chat.db
+    volumes:
+      # Bind mount on the host: the SQLite database lives at ./data/chat.db and
+      # survives image rebuilds and container replacement. This folder is the
+      # complete record of every conversation — back it up, don't commit it.
+      - ./data:/data
