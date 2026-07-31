@@ -1,0 +1,55 @@
+# Server deployment — runs the PREBUILT image from GHCR, never builds from source.
+#
+#   cp .env.example .env   # fill in the two Cloudflare values
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# To update:  docker compose -f docker-compose.prod.yml pull && ... up -d
+# (or turn on the optional watchtower service below to do it automatically).
+services:
+  chatbot:
+    image: ghcr.io/lbellows/kids-chatbot:latest
+    container_name: kids-chatbot
+    restart: unless-stopped
+    pull_policy: always
+    # Published to the host so any device on the LAN can reach it directly with
+    # no login: http://<server-ip>:3000. That is safe only because it isn't
+    # internet-routable — do NOT port-forward 3000 on your router.
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /data/chat.db
+    volumes:
+      # Host bind mount. The SQLite database lives at <this folder>/data/chat.db
+      # and survives image updates and container replacement. The DB is NEVER
+      # baked into the image — it only exists in this folder on the server.
+      # Point this wherever you keep service data, e.g. /srv/kids-chatbot.
+      - ./data:/data
+    labels:
+      # Opt this container in to watchtower (which is configured below to only
+      # touch containers carrying this label).
+      com.centurylinklabs.watchtower.enable: "true"
+
+  # OPTIONAL automatic updates. Off by default — start it explicitly with:
+  #   docker compose -f docker-compose.prod.yml --profile autoupdate up -d
+  #
+  # Polls GHCR every 6 hours and recreates the chatbot when :latest changes.
+  # The trade-off: a push to main reaches the server with no review step, so
+  # a bad build lands unattended. Leave it off if you'd rather pull by hand.
+  watchtower:
+    profiles: ["autoupdate"]
+    image: containrrr/watchtower:latest
+    container_name: kids-chatbot-watchtower
+    restart: unless-stopped
+    environment:
+      # Only manage containers explicitly labelled above — never anything else
+      # running on this host.
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"       # delete the superseded image
+      WATCHTOWER_POLL_INTERVAL: "21600" # 6 hours
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # If the GHCR package is private, watchtower needs the same credentials
+      # you used for `docker login ghcr.io`:
+      # - ~/.docker/config.json:/config.json:ro

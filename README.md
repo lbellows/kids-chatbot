@@ -44,6 +44,52 @@ You need two values in `.env`:
 Without them the app still starts and shows a plain "setup needed" message
 instead of a broken chat box.
 
+## Deploying to a server, and getting updates
+
+Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds a
+multi-arch (amd64 + arm64) image and publishes it to
+`ghcr.io/lbellows/kids-chatbot:latest`, plus a `:<git-sha>` tag you can pin to or
+roll back to. **The server never builds from source** — it pulls that image.
+
+On the server, use `docker-compose.prod.yml`:
+
+```sh
+cp .env.example .env      # fill in the two Cloudflare values
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Update it with:
+
+```sh
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+The container is replaced; the bind-mounted database at `./data/chat.db` (and
+all chat history) stays put.
+
+### Automatic updates (optional)
+
+`docker-compose.prod.yml` includes a **watchtower** service behind a Compose
+profile, so it's off unless you ask for it:
+
+```sh
+docker compose -f docker-compose.prod.yml --profile autoupdate up -d
+```
+
+It polls GHCR every 6 hours and recreates the container when `:latest` changes.
+It's scoped by label to *only* this container, so nothing else on the host is
+touched. The trade-off is that a push to `main` reaches the server with no
+review step — leave it off if you'd rather pull by hand.
+
+### Backups
+
+The whole chat log is one SQLite file on the host — just copy it:
+
+```sh
+cp data/chat.db ./chat-backup-$(date +%F).db
+```
+
 ## Running without Docker
 
 ```sh
