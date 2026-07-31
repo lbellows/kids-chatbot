@@ -51,6 +51,27 @@ Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds 
 `ghcr.io/lbellows/kids-chatbot:latest`, plus a `:<git-sha>` tag you can pin to or
 roll back to. **The server never builds from source** — it pulls that image.
 
+### One-time: let the server pull the image
+
+This repo is private, so the published package is private too and the server
+must authenticate before it can pull. Create a GitHub personal access token with
+just the **`read:packages`** scope, then on the server:
+
+```sh
+echo "<token>" | docker login ghcr.io -u lbellows --password-stdin
+```
+
+Credentials are saved to `~/.docker/config.json`, so this is needed only once.
+
+(Alternative: make the *package* public at
+`github.com/users/lbellows/packages/container/kids-chatbot/settings` — package
+visibility is independent of repo visibility, and no login is then needed. Note
+that a public image effectively publishes the source code, since anyone can pull
+and extract it. There are no secrets in the image — credentials come from `.env`
+at runtime — but the code itself would be readable.)
+
+### Deploy
+
 On the server, use `docker-compose.prod.yml`:
 
 ```sh
