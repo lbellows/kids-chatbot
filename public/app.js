@@ -11,6 +11,12 @@
 
   var MAX_NAME = 24; // keep in step with MAX_NAME_CHARS in server.js
 
+  /* Hides the per-chat trash icon in the sidebar. Everything behind it is
+     intentionally left in place — deleteChat() below, the DELETE /api/chats/:id
+     route, and the soft delete in db.js — so flipping this back to true is the
+     only change needed to bring the button back. */
+  var SHOW_DELETE_BUTTON = false;
+
   var state = {
     kid: null,
     ready: false,
@@ -131,18 +137,21 @@
       open.title = chat.title;
       open.addEventListener("click", function () { openChat(chat.id); });
 
-      var del = document.createElement("button");
-      del.className = "del";
-      del.textContent = "🗑";
-      del.title = "Delete this chat";
-      del.setAttribute("aria-label", "Delete chat: " + chat.title);
-      del.addEventListener("click", function (e) {
-        e.stopPropagation();
-        deleteChat(chat.id);
-      });
-
       row.appendChild(open);
-      row.appendChild(del);
+
+      if (SHOW_DELETE_BUTTON) {
+        var del = document.createElement("button");
+        del.className = "del";
+        del.textContent = "🗑";
+        del.title = "Delete this chat";
+        del.setAttribute("aria-label", "Delete chat: " + chat.title);
+        del.addEventListener("click", function (e) {
+          e.stopPropagation();
+          deleteChat(chat.id);
+        });
+        row.appendChild(del);
+      }
+
       els.history.appendChild(row);
     });
   }
