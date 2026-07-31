@@ -46,8 +46,8 @@ instead of a broken chat box.
 
 ## Deploying to a server, and getting updates
 
-Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds a
-multi-arch (amd64 + arm64) image and publishes it to
+Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds an
+`linux/amd64` image and publishes it to
 `ghcr.io/lbellows/kids-chatbot:latest`, plus a `:<git-sha>` tag you can pin to or
 roll back to. **The server never builds from source** — it pulls that image.
 

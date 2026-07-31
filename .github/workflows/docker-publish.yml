@@ -23,12 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # arm64 is emulated. That stays cheap only because the Dockerfile installs
-      # with --ignore-scripts and uses better-sqlite3's prebuilt N-API binaries
-      # — nothing compiles under QEMU, which is the slow part.
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -43,7 +37,10 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          # amd64 only — the server is x86. Adding linux/arm64 back means
+          # re-adding the QEMU setup step above; the image itself is
+          # arch-agnostic (better-sqlite3 ships prebuilds for both).
+          platforms: linux/amd64
           push: true
           # `:latest` is what deployments track; the SHA tag gives you an exact
           # image to pin or roll back to if a release misbehaves.
