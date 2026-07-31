@@ -51,24 +51,25 @@ Pushing to `main` triggers `.github/workflows/docker-publish.yml`, which builds 
 `ghcr.io/lbellows/kids-chatbot:latest`, plus a `:<git-sha>` tag you can pin to or
 roll back to. **The server never builds from source** — it pulls that image.
 
-### One-time: let the server pull the image
+### Package visibility
 
-This repo is private, so the published package is private too and the server
-must authenticate before it can pull. Create a GitHub personal access token with
-just the **`read:packages`** scope, then on the server:
+The GHCR package is **public**, so the server pulls with no `docker login` —
+same arrangement as `lcb-chat`. Package visibility is independent of repo
+visibility, which is why a private repo can publish a public image.
+
+What that means: anyone can pull the image and read the source. That's accepted
+here — the code is generic, and nothing sensitive is inside. `.dockerignore`
+excludes `.env`, `.env.*`, `data/`, and `.git`, credentials arrive at runtime via
+`env_file`, and the chat database lives only in the host bind mount, never in
+the image.
+
+To make it private instead, flip it at
+`github.com/users/lbellows/packages/container/kids-chatbot/settings`, then
+authenticate the server once with a `read:packages` token:
 
 ```sh
 echo "<token>" | docker login ghcr.io -u lbellows --password-stdin
 ```
-
-Credentials are saved to `~/.docker/config.json`, so this is needed only once.
-
-(Alternative: make the *package* public at
-`github.com/users/lbellows/packages/container/kids-chatbot/settings` — package
-visibility is independent of repo visibility, and no login is then needed. Note
-that a public image effectively publishes the source code, since anyone can pull
-and extract it. There are no secrets in the image — credentials come from `.env`
-at runtime — but the code itself would be readable.)
 
 ### Deploy
 
