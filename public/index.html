@@ -45,7 +45,19 @@
     <nav class="history" id="history"></nav>
 
     <div class="sidebar-foot">
-      <button class="whoami" id="whoami" title="Not you? Tap to switch."></button>
+      <!-- Inline SVG rather than an emoji: this label is written during boot,
+           and an emoji there paints before the emoji font is ready. See the
+           note in app.js and docs/fonts.md. -->
+      <button class="whoami" id="whoami" title="Not you? Tap to switch.">
+        <svg class="whoami-icon" viewBox="0 0 24 24" aria-hidden="true"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span class="whoami-name" id="whoamiName"></span>
+      </button>
     </div>
   </aside>
 

@@ -216,18 +216,34 @@ button, textarea { font-family: inherit; }
 .history-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 10px;
+  padding-left: 14px;
+  margin-bottom: 8px;
   border-radius: 14px;
   transition: background 0.12s ease;
 }
 .history-item:hover { background: var(--bg); }
 .history-item.active { background: #e9e5ff; }
 
+/* A bullet per chat, cycling through the palette. Titles are one line each and
+   run together without it; the colour also makes the list easier to point at
+   ("the green one"). Decorative, so a pseudo-element rather than markup. */
+.history-item::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+.history-item:nth-child(4n + 2)::before { background: var(--pink); }
+.history-item:nth-child(4n + 3)::before { background: var(--yellow); }
+.history-item:nth-child(4n + 4)::before { background: var(--purple); }
+
 .history-item button.open {
   flex: 1;
   min-width: 0;
-  padding: 13px 12px;
+  padding: 13px 12px 13px 0;
   border: none;
   background: none;
   color: var(--ink);
@@ -260,6 +276,10 @@ button, textarea { font-family: inherit; }
 .sidebar-foot { padding: 12px 16px 16px; border-top: 2px solid var(--line); }
 
 .whoami {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
   padding: 12px;
   border: 2px solid var(--line);
@@ -268,6 +288,15 @@ button, textarea { font-family: inherit; }
   color: var(--ink-soft);
   font-size: 16px;
   cursor: pointer;
+}
+.whoami-icon { flex: 0 0 auto; width: 20px; height: 20px; }
+/* The name can be up to 24 characters, so let it ellipsis rather than push the
+   icon out of the button. */
+.whoami-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .whoami:hover { border-color: var(--purple); color: var(--purple); }
 

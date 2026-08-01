@@ -42,6 +42,7 @@
     composer: $("composer"),
     scrollDown: $("scrollDown"),
     whoami: $("whoami"),
+    whoamiName: $("whoamiName"),
     emojiBtn: $("emojiBtn"),
     emojiPanel: $("emojiPanel"),
   };
@@ -104,8 +105,9 @@
     els.app.hidden = false;
     // No emoji here on purpose: this label is written during boot and Chromium
     // paints it before the emoji font is ready, then never re-lays it out.
-    // See docs/fonts.md.
-    els.whoami.textContent = name + " — not you?";
+    // The log-out icon next to it is inline SVG in index.html for the same
+    // reason. See docs/fonts.md.
+    els.whoamiName.textContent = name + " — not you?";
     newChat();
     autoGrow(); // now that the app is visible, size the input for real
     loadHistory();
@@ -260,12 +262,54 @@
     return out.join("");
   }
 
+  /* The welcome screen shows a few of these, picked at random each time it is
+     drawn (first load, and every new chat) so the home page feels different
+     every visit. Keep them short enough to fit on one line of a pill. */
   var SUGGESTIONS = [
     "Why is the sky blue?",
     "Tell me a funny joke",
     "How do birds fly?",
     "Help me with my spelling",
+    "Why do we have to sleep?",
+    "How big is a blue whale?",
+    "Tell me a story about a dragon",
+    "What do dinosaurs eat?",
+    "Why is the ocean salty?",
+    "How do rainbows happen?",
+    "What's inside a volcano?",
+    "How does a plant grow?",
+    "Why do cats purr?",
+    "What are stars made of?",
+    "Help me with my times tables",
+    "Give me a riddle to solve",
+    "How does a bicycle stay up?",
+    "Why do we get hiccups?",
+    "What's the fastest animal?",
+    "How do bees make honey?",
+    "Tell me a fun fact about space",
+    "Why do leaves change colour?",
+    "How does a rocket work?",
+    "What should I draw today?",
+    "Teach me a new word",
+    "Why do we yawn?",
+    "How deep is the sea?",
+    "Tell me about the moon",
   ];
+
+  var SUGGESTIONS_SHOWN = 4;
+
+  /* Random sample without replacement: shuffle a copy and take the front.
+     `slice()` first so the constant above keeps its order for the next call. */
+  function pickSuggestions(n) {
+    var pool = SUGGESTIONS.slice();
+    for (var i = pool.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = pool[i];
+      pool[i] = pool[j];
+      pool[j] = tmp;
+    }
+    return pool.slice(0, n);
+  }
 
   function renderWelcome() {
     var wrap = document.createElement("div");
@@ -290,7 +334,7 @@
     if (state.ready) {
       var sug = document.createElement("div");
       sug.className = "suggestions";
-      SUGGESTIONS.forEach(function (text) {
+      pickSuggestions(SUGGESTIONS_SHOWN).forEach(function (text) {
         var b = document.createElement("button");
         b.textContent = text;
         b.addEventListener("click", function () { sendMessage(text); });
