@@ -116,9 +116,13 @@ cp data/chat.db ./chat-backup-$(date +%F).db
 
 ```sh
 npm install
-cp .env.example .env
-node --env-file=.env server.js
+cp .env.example .env      # fill in the two Cloudflare values
+npm start                 # or: npm run dev, which restarts on file changes
 ```
+
+Both scripts read `.env` themselves (`--env-file-if-exists`), so there is no
+`dotenv` dependency and nothing to load in code. In Docker the file is never
+read — compose passes the same variables in through `env_file:`.
 
 ## Configuration
 
