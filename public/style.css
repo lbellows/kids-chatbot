@@ -1,6 +1,28 @@
 /* Sparky — a chat UI sized and coloured for a 6-year-old.
    Deliberately large type, big tap targets, and high contrast. */
 
+/* Text and emoji are both bundled so the app renders identically on every
+   device. The reasoning, and the testing behind it, is in docs/fonts.md —
+   read that before changing anything in this block. */
+@font-face {
+  font-family: "Nunito";
+  src: url("/fonts/Nunito-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Color Emoji COLR";
+  src: url("/fonts/NotoColorEmoji-COLRv1.woff2") format("woff2");
+  /* `block`, not `swap` — swap paints a tofu box first. See docs/fonts.md. */
+  font-display: block;
+  /* Emoji blocks only. Excluding ASCII is load-bearing: this font has cmap
+     entries for 0-9, # and *, so an unscoped face would render digits.
+     Adding palette emoji? Check they fall in range — docs/fonts.md. */
+  unicode-range: U+200D, U+2600-27BF, U+2B00-2BFF, U+FE0F,
+                 U+1F000-1FAFF, U+E0020-E007F;
+}
+
 :root {
   --purple: #5b4bd6;
   --purple-dark: #453aa8;
@@ -15,7 +37,12 @@
   --line: #e3dffa;
 
   --radius: 18px;
-  --font: "Trebuchet MS", "Segoe UI", Verdana, system-ui, sans-serif;
+  /* The emoji face sits SECOND, ahead of the system fonts, so none of them can
+     answer an emoji codepoint first with a monochrome glyph — only safe
+     because it carries a unicode-range. Everything after the two bundled
+     faces is just the pre-load fallback. See docs/fonts.md. */
+  --font: "Nunito", "Noto Color Emoji COLR", system-ui, -apple-system,
+          "Segoe UI", Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -338,7 +365,9 @@ button, textarea { font-family: inherit; }
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--yellow);
+  /* Soft lilac, not yellow: the ⭐ is a *colour* glyph now that the emoji font
+     is bundled, and a yellow star on a yellow disc was all but invisible. */
+  background: #ede9ff;
   font-size: 20px;
 }
 .msg .bubble {

@@ -102,7 +102,10 @@
     state.kid = name;
     els.picker.hidden = true;
     els.app.hidden = false;
-    els.whoami.textContent = "👋 " + name + " — not you?";
+    // No emoji here on purpose: this label is written during boot and Chromium
+    // paints it before the emoji font is ready, then never re-lays it out.
+    // See docs/fonts.md.
+    els.whoami.textContent = name + " — not you?";
     newChat();
     autoGrow(); // now that the app is visible, size the input for real
     loadHistory();

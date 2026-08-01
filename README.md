@@ -179,9 +179,16 @@ documents what it will and won't do. Two things are worth being clear about:
 ## Layout
 
 ```
-server.js    Express app: static files, chat/history REST API, SSE streaming
-db.js        SQLite schema and queries (chats + messages)
-ai.js        Cloudflare Workers AI REST client, streaming
-prompt.js    The kid-safety system prompt and history-title helper
-public/      The web UI (no build step, no dependencies)
+server.js      Express app: static files, chat/history REST API, SSE streaming
+db.js          SQLite schema and queries (chats + messages)
+ai.js          Cloudflare Workers AI REST client, streaming
+prompt.js      The kid-safety system prompt and history-title helper
+public/        The web UI (no build step, no dependencies)
+public/fonts/  Bundled text + emoji fonts — see docs/fonts.md
+docs/fonts.md  Why the fonts are bundled and how the font stack is ordered
 ```
+
+The text and emoji fonts ship with the app so it renders identically on every
+device on the network. If you touch the font stack, the emoji palette, or the
+`/fonts` cache headers, read **[docs/fonts.md](docs/fonts.md)** first — several
+parts of that setup are load-bearing in non-obvious ways.

@@ -21,6 +21,20 @@ const MAX_TURNS = 20; // messages of history sent to the model
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
+
+/* Bundled fonts are immutable, so cache them hard — the default `max-age=0`
+ * makes the browser revalidate ~2MB before first paint. App code below stays
+ * uncached so deploys take effect immediately.
+ * The filenames are the version tags: RENAME THE FILE when swapping in a
+ * different font, or clients keep the old one for a year. See docs/fonts.md. */
+app.use(
+  "/fonts",
+  express.static(join(__dirname, "public", "fonts"), {
+    maxAge: "1y",
+    immutable: true,
+  })
+);
+
 app.use(express.static(join(__dirname, "public")));
 
 /** The name the kid typed on the welcome screen. It scopes the history sidebar
