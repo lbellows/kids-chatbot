@@ -148,14 +148,19 @@ app.post("/api/chat", async (req, res) => {
   const controller = new AbortController();
   res.on("close", () => controller.abort());
 
+  // Accumulated from the deltas rather than streamReply's return value, which
+  // never arrives when the stream is aborted or fails partway through.
   let answer = "";
   try {
-    answer = await streamReply({
+    await streamReply({
       messages: getMessages(chat.id)
         .slice(-MAX_TURNS)
         .map(({ role, content }) => ({ role, content })),
       system: SYSTEM_PROMPT,
-      onDelta: (delta) => send({ text: delta }),
+      onDelta: (delta) => {
+        answer += delta;
+        send({ text: delta });
+      },
       signal: controller.signal,
     });
   } catch (err) {
