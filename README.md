@@ -132,7 +132,7 @@ Everything is environment variables (see `.env.example`):
 |---|---|---|
 | `CLOUDFLARE_ACCOUNT_ID` | — | Required for chat to work |
 | `CLOUDFLARE_API_TOKEN` | — | Required for chat to work |
-| `KIDS_MODEL` | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Any Workers AI text model |
+| `KIDS_MODEL` | `@cf/google/gemma-4-26b-a4b-it` | Any Workers AI text model (thinking is switched off) |
 | `PORT` | `3000` | |
 | `DB_PATH` | `./data/chat.db` | `/data/chat.db` inside the container |
 

@@ -11,12 +11,13 @@
 const ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID;
 const API_TOKEN = process.env.CLOUDFLARE_API_TOKEN;
 
-// Llama 3.3 70B: a non-reasoning instruct model that follows a long behavioral
-// system prompt closely — which is exactly what the kid-safety rules in
-// prompt.js depend on. The "fp8-fast" variant keeps replies quick enough that a
-// 6-year-old doesn't lose interest. Context size is not a concern here: the
-// prompt is small and history is capped at MAX_TURNS.
-const MODEL = process.env.KIDS_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+// Gemma 4 26B (MoE, ~4B active), run with thinking switched off (see
+// chat_template_kwargs below). In an interleaved A/B against Llama 3.3 70B on
+// the prompt.js rules it was ~40% faster end to end, kept to the "2-4
+// sentences" rule more often, and handed a disclosure of abuse to a grown-up
+// instead of trying to counsel the child. Context size is not a concern here:
+// the prompt is small and history is capped at MAX_TURNS.
+const MODEL = process.env.KIDS_MODEL || "@cf/google/gemma-4-26b-a4b-it";
 
 // Answers are meant to be a few sentences (see the prompt), so this cap is a
 // backstop against a runaway generation, not a normal limit.
@@ -62,6 +63,12 @@ export async function streamReply({ messages, system, onDelta, signal }) {
         messages: [{ role: "system", content: system }, ...messages],
         max_tokens: MAX_OUTPUT_TOKENS,
         stream: true,
+        // Reasoning models (Gemma 4, Qwen 3.x, Nemotron 3, GLM) think by default,
+        // and the thinking is dropped by parseDelta — to a kid it's just a long
+        // silence, and it can eat all of MAX_OUTPUT_TOKENS and leave no reply.
+        // `reasoning_effort: "low"` does NOT prevent that; this does. Models
+        // without a thinking mode ignore it.
+        chat_template_kwargs: { enable_thinking: false },
       }),
       signal,
     }
