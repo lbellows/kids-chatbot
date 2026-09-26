@@ -36,6 +36,20 @@
   --ink-soft: #635e8a;
   --line: #e3dffa;
 
+  /* `--purple` fills buttons behind white text; `--accent` is the same hue for
+     borders, focus rings and dots drawn straight on a panel, and gets lighter
+     in dark mode where plain purple would vanish. */
+  --accent: #5b4bd6;
+  --soft: #ede9ff;
+  --active: #e9e5ff;
+  --disabled: #bdb7e6;
+  --error-bg: #ffe8ee;
+  --error-ink: #a02141;
+  --code-bg: rgba(91, 75, 214, 0.12);
+  --shadow: rgba(36, 31, 71, 0.3);
+
+  color-scheme: light;
+
   --radius: 18px;
   /* The emoji face sits SECOND, ahead of the system fonts, so none of them can
      answer an emoji codepoint first with a monochrome glyph — only safe
@@ -43,6 +57,47 @@
      faces is just the pre-load fallback. See docs/fonts.md. */
   --font: "Nunito", "Noto Color Emoji COLR", system-ui, -apple-system,
           "Segoe UI", Roboto, sans-serif;
+}
+
+/* Dark mode follows the device unless the header toggle has pinned a theme
+   (data-theme on <html>, set before first paint by the script in index.html).
+   The palette is listed twice because CSS can't OR a media query with an
+   attribute selector — keep the two blocks identical. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --purple-dark: #6d5ee6;
+    --bg: #15122b;
+    --panel: #221e3f;
+    --ink: #f0edff;
+    --ink-soft: #aaa4d4;
+    --line: #373161;
+    --accent: #a197ff;
+    --soft: #2f2a58;
+    --active: #342d68;
+    --disabled: #4a4380;
+    --error-bg: #4a1d2e;
+    --error-ink: #ffb8c8;
+    --code-bg: rgba(161, 151, 255, 0.18);
+    --shadow: rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --purple-dark: #6d5ee6;
+  --bg: #15122b;
+  --panel: #221e3f;
+  --ink: #f0edff;
+  --ink-soft: #aaa4d4;
+  --line: #373161;
+  --accent: #a197ff;
+  --soft: #2f2a58;
+  --active: #342d68;
+  --disabled: #4a4380;
+  --error-bg: #4a1d2e;
+  --error-ink: #ffb8c8;
+  --code-bg: rgba(161, 151, 255, 0.18);
+  --shadow: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -125,7 +180,7 @@ button, textarea { font-family: inherit; }
   text-align: center;
   outline: none;
 }
-.name-form input:focus { border-color: var(--purple); }
+.name-form input:focus { border-color: var(--accent); }
 
 .name-form button {
   flex: 1 1 100%;
@@ -223,7 +278,7 @@ button, textarea { font-family: inherit; }
   transition: background 0.12s ease;
 }
 .history-item:hover { background: var(--bg); }
-.history-item.active { background: #e9e5ff; }
+.history-item.active { background: var(--active); }
 
 /* A bullet per chat, cycling through the palette. Titles are one line each and
    run together without it; the colour also makes the list easier to point at
@@ -238,7 +293,7 @@ button, textarea { font-family: inherit; }
 }
 .history-item:nth-child(4n + 2)::before { background: var(--pink); }
 .history-item:nth-child(4n + 3)::before { background: var(--yellow); }
-.history-item:nth-child(4n + 4)::before { background: var(--purple); }
+.history-item:nth-child(4n + 4)::before { background: var(--accent); }
 
 .history-item button.open {
   flex: 1;
@@ -298,7 +353,7 @@ button, textarea { font-family: inherit; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.whoami:hover { border-color: var(--purple); color: var(--purple); }
+.whoami:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---------- chat column ---------- */
 
@@ -342,6 +397,18 @@ button, textarea { font-family: inherit; }
 .icon-btn:hover { background: var(--line); }
 .open-sidebar, .new-chat-mobile { display: none; }
 
+/* Theme toggle: shows the moon in light mode and the sun in dark. Both icons
+   are inline SVG in the markup, so CSS picks one and no emoji paints before
+   the emoji font is ready. */
+.theme-btn svg { width: 22px; height: 22px; vertical-align: middle; }
+.theme-btn .sun { display: none; }
+:root[data-theme="dark"] .theme-btn .sun { display: inline; }
+:root[data-theme="dark"] .theme-btn .moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-btn .sun { display: inline; }
+  :root:not([data-theme="light"]) .theme-btn .moon { display: none; }
+}
+
 /* ---------- messages ---------- */
 
 .messages {
@@ -378,7 +445,7 @@ button, textarea { font-family: inherit; }
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.12s ease;
 }
-.suggestions button:hover { border-color: var(--purple); transform: translateY(-2px); }
+.suggestions button:hover { border-color: var(--accent); transform: translateY(-2px); }
 
 .msg {
   max-width: 760px;
@@ -396,7 +463,7 @@ button, textarea { font-family: inherit; }
   border-radius: 50%;
   /* Soft lilac, not yellow: the ⭐ is a *colour* glyph now that the emoji font
      is bundled, and a yellow star on a yellow disc was all but invisible. */
-  background: #ede9ff;
+  background: var(--soft);
   font-size: 20px;
 }
 .msg .bubble {
@@ -417,7 +484,7 @@ button, textarea { font-family: inherit; }
 .msg.assistant .bubble { border-bottom-left-radius: 6px; }
 
 .msg.error .avatar { background: var(--pink); }
-.msg.error .bubble { background: #ffe8ee; color: #a02141; }
+.msg.error .bubble { background: var(--error-bg); color: var(--error-ink); }
 
 .msg .bubble p { margin: 0 0 10px; }
 .msg .bubble p:last-child { margin-bottom: 0; }
@@ -426,7 +493,7 @@ button, textarea { font-family: inherit; }
 .msg .bubble code {
   padding: 2px 6px;
   border-radius: 6px;
-  background: rgba(91, 75, 214, 0.12);
+  background: var(--code-bg);
   font-size: 0.92em;
 }
 .msg.user .bubble code { background: rgba(255, 255, 255, 0.22); }
@@ -437,7 +504,7 @@ button, textarea { font-family: inherit; }
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--purple);
+  background: var(--accent);
   animation: bounce 1.2s infinite ease-in-out;
 }
 .thinking .bubble span:nth-child(2) { animation-delay: 0.15s; }
@@ -459,7 +526,7 @@ button, textarea { font-family: inherit; }
   color: #fff;
   font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(36, 31, 71, 0.3);
+  box-shadow: 0 6px 18px var(--shadow);
 }
 
 /* ---------- composer ---------- */
@@ -493,7 +560,7 @@ button, textarea { font-family: inherit; }
      this back to `auto` at max-height. */
   overflow-y: hidden;
 }
-.composer textarea:focus { border-color: var(--purple); }
+.composer textarea:focus { border-color: var(--accent); }
 
 .composer button {
   flex: 0 0 auto;
@@ -508,7 +575,7 @@ button, textarea { font-family: inherit; }
   transition: background 0.12s ease, transform 0.12s ease;
 }
 .composer button:hover:not(:disabled) { background: var(--purple-dark); transform: translateY(-1px); }
-.composer button:disabled { background: #bdb7e6; cursor: not-allowed; }
+.composer button:disabled { background: var(--disabled); cursor: not-allowed; }
 
 /* ---------- emoji picker ---------- */
 
@@ -524,8 +591,8 @@ button, textarea { font-family: inherit; }
   cursor: pointer;
   transition: border-color 0.12s ease, transform 0.12s ease;
 }
-.emoji-btn:hover { border-color: var(--purple); transform: translateY(-1px); }
-.emoji-btn[aria-expanded="true"] { border-color: var(--purple); background: #ede9ff; }
+.emoji-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+.emoji-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--soft); }
 
 .emoji-panel {
   position: absolute;
@@ -544,7 +611,7 @@ button, textarea { font-family: inherit; }
   background: var(--panel);
   border: 3px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: 0 16px 40px rgba(36, 31, 71, 0.28);
+  box-shadow: 0 16px 40px var(--shadow);
 }
 .emoji-panel button {
   aspect-ratio: 1;
@@ -602,7 +669,7 @@ button, textarea { font-family: inherit; }
     left: 0;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
-    box-shadow: 0 0 40px rgba(36, 31, 71, 0.3);
+    box-shadow: 0 0 40px var(--shadow);
   }
   .sidebar.open { transform: none; }
 

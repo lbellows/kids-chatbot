@@ -8,6 +8,7 @@
   "use strict";
 
   var KID_KEY = "kids-chatbot.kid";
+  var THEME_KEY = "kids-chatbot.theme"; // also read by the inline script in index.html
 
   var MAX_NAME = 24; // keep in step with MAX_NAME_CHARS in server.js
 
@@ -637,6 +638,17 @@
   $("openSidebar").addEventListener("click", openSidebar);
   $("closeSidebar").addEventListener("click", closeSidebar);
   els.scrim.addEventListener("click", closeSidebar);
+
+  /* Flip to the opposite of whatever is showing — the device's theme until the
+     first tap, then the saved choice. index.html re-applies it on load. */
+  $("themeBtn").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = root.dataset.theme
+      ? root.dataset.theme === "dark"
+      : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, root.dataset.theme); } catch (e) {}
+  });
 
   els.whoami.addEventListener("click", function () {
     localStorage.removeItem(KID_KEY);
